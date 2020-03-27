@@ -82,6 +82,26 @@ def instances():
     help="Create snapshots for all volumes")
 @click.pass_context
 
+def create_snapshots(self, project):
+    "Create snapshots for EC2 instances"
+
+    instances = filter_instances(project)
+
+    for i in instances:
+        print("Stopping {0}...".format(i.id))
+        i.stop()
+        i.wait_until_stopped()
+        for v in i.volumes.all():
+            print("Creating snapshot of {0}".format(v.id))
+            v.create_snapshot(Description="Created by SnapshotAnalyzer 30000")
+
+        print("Starting {0}...".format(i.id))
+        i.start()
+        i.wait_until_running()
+
+    print("Job's done!")
+
+    return
 
 
 @instances.command('list')
@@ -89,18 +109,6 @@ def instances():
     help="Only instances for project (tag Project:<name>)")
 @click.pass_context
 
-def create_snapshots(self, project):
-    "Create snapshots for EC2 instances"
-
-    instances = filter_instances(project)
-
-    for i in instances:
-        i.stop()
-        for v in i.volumes.all():
-            print("Creating snapshot of {0}".format(v.id))
-            v.create_snapshot(Description="Created by SnapshotAnalyzer 30000")
-
-    return
 
 def list_instances(self, project):
     "List EC2 Instances"
